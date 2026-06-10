@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LevelUp — Ralf</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#181b24; --panel2:#1f2330; --border:#2a2f3e;
+    --text:#e8eaf0; --muted:#9aa1b5; --accent:#5b8cff; --accent2:#3ddc97;
+    --warn:#ffb454; --bad:#ff6b6b; --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:60px}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+  h1{font-size:21px;letter-spacing:.3px}
+  h1 span{color:var(--accent)}
+  .hright{display:flex;gap:8px;align-items:center}
+  .streak{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:13px;color:var(--muted);white-space:nowrap}
+  .streak b{color:var(--accent2);font-size:17px}
+  #syncDot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block}
+  #syncDot.ok{background:var(--accent2)} #syncDot.err{background:var(--bad)} #syncDot.busy{background:var(--warn)}
+  nav{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+  nav button{flex:1;min-width:90px;background:var(--panel);color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);padding:10px 4px;font-size:13.5px;cursor:pointer}
+  nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .card h2{font-size:17px;margin-bottom:10px}
+  .card h3{font-size:15px;margin:14px 0 6px;color:var(--accent)}
+  .q{font-size:15px;margin:14px 0 8px;font-weight:600}
+  .opts{display:flex;gap:8px;flex-wrap:wrap}
+  .opts button{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 16px;cursor:pointer;font-size:14px;min-width:46px}
+  .opts button.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  textarea,input[type=text],input[type=password]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:11px;font-size:14px;font-family:inherit;resize:vertical}
+  select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:14px;width:100%}
+  .btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:15px;cursor:pointer;margin-top:14px}
+  .btn.green{background:var(--accent2);color:#0f1117;font-weight:600}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .muted{color:var(--muted);font-size:13.5px}
+  .small{font-size:13px;color:var(--muted)}
+  .action{background:var(--panel2);border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
+  .action b{display:block;margin-bottom:3px}
+  .action .why{font-size:12.5px;color:var(--muted);margin-top:5px;font-style:italic}
+  .badge{display:inline-block;border-radius:20px;padding:2px 12px;font-size:12px;font-weight:600;margin-left:8px}
+  .badge.done{background:rgba(61,220,151,.15);color:var(--accent2)}
+  .badge.todo{background:rgba(255,180,84,.15);color:var(--warn)}
+  .statrow{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+  .stat{flex:1;min-width:90px;background:var(--panel2);border-radius:8px;padding:10px;text-align:center}
+  .stat .v{font-size:22px;font-weight:700;color:var(--accent)}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .done{color:var(--accent2)} .notdone{color:var(--bad)}
+  .histitem{border-bottom:1px solid var(--border);padding:10px 0;font-size:14px}
+  .histitem:last-child{border:none}
+  canvas{width:100%;background:var(--panel2);border-radius:8px}
+  .step-ind{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  details{margin:10px 0;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+  summary{cursor:pointer;font-weight:600;font-size:14.5px}
+  details p,details li{font-size:13.5px;color:var(--muted);margin-top:8px}
+  details ul,details ol{margin-left:18px;margin-top:6px}
+  details code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:12.5px}
+  .hidden{display:none}
+  .scale label{display:block;font-size:13.5px;color:var(--muted);margin:10px 0 4px}
+  .row2{display:flex;gap:10px;flex-wrap:wrap}.row2>*{flex:1;min-width:150px}
+  .footer-tools{margin-top:30px;text-align:center}
+  .footer-tools button{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;margin:0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Level<span>Up</span> <span class="small" id="devLabel"></span></h1>
+    <div class="hright">
+      <span id="syncDot" title="sync status"></span>
+      <div class="streak">Streak <b id="streakNum">0</b></div>
+    </div>
+  </header>
+
+  <nav>
+    <button id="tab-daily" class="active" onclick="show('daily')">Daily</button>
+    <button id="tab-deep" onclick="show('deep')">Deep Session</button>
+    <button id="tab-history" onclick="show('history')">History</button>
+    <button id="tab-playbook" onclick="show('playbook')">Playbook</button>
+    <button id="tab-settings" onclick="show('settings')">Sync</button>
+  </nav>
+
+  <!-- ================= DAILY ================= -->
+  <div id="view-daily">
+    <div class="card">
+      <div class="step-ind" id="dailyDate"></div>
+      <h2>Morning pulse <span class="small">· 30 sec, phone</span> <span id="amBadge" class="badge todo">open</span></h2>
+      <div id="amFlow"></div>
+    </div>
+    <div class="card">
+      <h2>Evening review <span class="small">· after work, Mac</span> <span id="pmBadge" class="badge todo">open</span></h2>
+      <div id="pmFlow"></div>
+    </div>
+  </div>
+
+  <!-- ================= DEEP ================= -->
+  <div id="view-deep" class="hidden">
+    <div class="card">
+      <div class="step-ind">Weekend deep session · ~15 min</div>
+      <div id="deepFlow"></div>
+    </div>
+  </div>
+
+  <!-- ================= HISTORY ================= -->
+  <div id="view-history" class="hidden">
+    <div class="card">
+      <h2>Last 30 days</h2>
+      <div class="statrow">
+        <div class="stat"><div class="v" id="stExec">–</div><div class="l">Execution</div></div>
+        <div class="stat"><div class="v" id="stMood">–</div><div class="l">Avg mood</div></div>
+        <div class="stat"><div class="v" id="stEnergy">–</div><div class="l">Avg energy</div></div>
+        <div class="stat"><div class="v" id="stCheckins">–</div><div class="l">Check-ins</div></div>
+      </div>
+      <canvas id="chart" height="180"></canvas>
+      <p class="small" style="margin-top:6px">Blue = mood · Green = energy · Bottom dots = commitment kept / partly / missed</p>
+    </div>
+    <div class="card"><h2>Daily log</h2><div id="histList"></div></div>
+    <div class="card"><h2>Deep sessions</h2><div id="deepList"></div></div>
+  </div>
+
+  <!-- ================= PLAYBOOK ================= -->
+  <div id="view-playbook" class="hidden">
+    <div class="card">
+      <h2>Design rationale</h2>
+      <p class="muted">Built on your 24-test profile. Two targets: the execution gap (Self-Discipline 9/20 vs Intellect 20/20) and the hidden low-mood/stress pattern (Depression facet 13/20, PSS 25/56, emotional awareness 7/20). Everything is a self-experiment — your autonomy and internal locus of control reject imposed regimes.</p>
+      <details><summary>The daily structure</summary>
+        <ul>
+          <li><b>Evening = planning organ.</b> Tomorrow's commitment + if-then plan is set after work, when you have energy. Implementation intentions: d = 0.65 across 94 studies (Gollwitzer & Sheeran 2006). Decisions made the night before survive low-willpower mornings because they're already made.</li>
+          <li><b>Morning = 30-second pulse only.</b> Mood + energy on the phone. No decisions required — by design. If mood ≤ 2, one sentence of affect labeling (Lieberman 2007: naming dampens amygdala reactivity; your emotional awareness is 7/20 so this is targeted training).</li>
+          <li><b>Evening review = accountability.</b> Did the committed thing happen? Execution rate counts truth, streak counts showing up.</li>
+        </ul>
+      </details>
+      <details><summary>The suggestion engine</summary>
+        <ul>
+          <li>Low mood → behavioral activation (SMD −0.74, equal to CBT; Ekers 2014) + one reappraisal rep (your ERQ reappraisal is mid-range and trainable).</li>
+          <li>Low energy → movement first (exercise rivals antidepressants for mild low mood).</li>
+          <li>Execution tactics rotate daily — your Openness kills fixed routines.</li>
+          <li>Framing: stakes and metrics, not virtue and cheerleading — low Agreeableness, high Achievement.</li>
+        </ul>
+      </details>
+      <details><summary>Weekend deep session</summary>
+        <p>WOOP/MCII (doubled follow-through in RCTs, Oettingen), weekly review, 2 mastery + 2 pleasure blocks (behavioral activation targets your SWLS 21/35 vs Flourishing 47/56 gap), PSS-4 stress pulse tracked over time.</p>
+      </details>
+      <details><summary>Key sources</summary>
+        <ul>
+          <li>Gollwitzer & Sheeran (2006), meta-analysis, d = 0.65</li>
+          <li>Wang et al. (2021), MCII meta-analysis, Frontiers in Psychology</li>
+          <li>Ekers et al. (2014), Behavioural Activation meta-analysis, PLOS ONE</li>
+          <li>Lieberman et al. (2007), Putting Feelings Into Words</li>
+          <li>Duckworth, Gendler & Gross (2016), Situational Strategies for Self-Control</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS / SYNC ================= -->
+  <div id="view-settings" class="hidden">
+    <div class="card">
+      <h2>Sync pipeline</h2>
+      <p class="muted">Data lives in a private GitHub Gist — a JSON document both devices read and write. Works offline; syncs when online. The same database can later feed new features (weekly email digests, charts, an LLM coach reading your history).</p>
+      <div id="syncStatusText" class="small" style="margin:8px 0"></div>
+      <div class="q">GitHub token <span class="small">(fine-grained, Gists read/write only)</span></div>
+      <input type="password" id="ghToken" placeholder="github_pat_…">
+      <div class="q">Gist ID <span class="small">(leave empty on first device — use Create database)</span></div>
+      <input type="text" id="gistId" placeholder="e.g. 4f3c2a…">
+      <div class="row2">
+        <button class="btn" onclick="saveSync()">Save & connect</button>
+        <button class="btn ghost" onclick="createGist()">Create database (first device)</button>
+        <button class="btn ghost" onclick="syncNow(true)">Sync now</button>
+      </div>
+      <details><summary>One-time setup (5 min)</summary>
+        <ol>
+          <li>On github.com: Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate. Account permissions → <b>Gists: Read and write</b>. Nothing else. Long expiry.</li>
+          <li>Paste the token above → <b>Create database</b>. This makes a private Gist and fills in the Gist ID.</li>
+          <li>On the iPhone: open this same page, paste the same token and Gist ID → <b>Save & connect</b>. Then Share → <b>Add to Home Screen</b> for an app icon.</li>
+          <li>To open this page on the phone, host it (GitHub Pages: new repo → upload this file as <code>index.html</code> → Settings → Pages → deploy from main) or AirDrop the file and open in Safari via the Files app.</li>
+        </ol>
+        <p>The token is stored only in this browser's localStorage on your devices, scoped to Gists only.</p>
+      </details>
+    </div>
+  </div>
+
+  <div class="footer-tools">
+    <button onclick="exportData()">Export</button>
+    <button onclick="importData()">Import</button>
+    <button onclick="if(confirm('Wipe ALL local data on this device? (Gist untouched)')){localStorage.removeItem(KEY);location.reload()}">Reset device</button>
+  </div>
+</div>
+
+<script>
+/* ============ CORE STORAGE ============ */
+const KEY='levelup_ralf_v2', CFGKEY='levelup_cfg_v2';
+function blankDB(){return{v:2,days:{},deep:[]}}
+function load(){try{return Object.assign(blankDB(),JSON.parse(localStorage.getItem(KEY))||{})}catch(e){return blankDB()}}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB))}
+function loadCfg(){try{return JSON.parse(localStorage.getItem(CFGKEY))||{}}catch(e){return{}}}
+function saveCfg(){localStorage.setItem(CFGKEY,JSON.stringify(CFG))}
+let DB=load(), CFG=loadCfg();
+const todayK=()=>new Date().toISOString().slice(0,10);
+const offsetK=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const day=k=>{if(!DB.days[k])DB.days[k]={};return DB.days[k]};
+const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
+document.getElementById('devLabel').textContent=isMobile?'· phone':'· mac';
+
+/* migrate v1 */
+(function(){
+  if(localStorage.getItem(KEY))return;
+  try{
+    const v1=JSON.parse(localStorage.getItem('levelup_ralf_v1'));
+    if(!v1)return;
+    Object.entries(v1.days||{}).forEach(([k,r])=>{
+      DB.days[k]={mood:r.mood,energy:r.energy,moodLabel:r.moodLabel||'',morningTs:r.ts,
+        mit:r.mit,trigger:r.trigger||'',obstacle:r.obstacle||'',planTs:r.ts,
+        ...(r.kept!==undefined?{kept:r.kept,eveningTs:r.ts}:{})};
+    });
+    DB.deep=(v1.deep||[]).map(s=>({...s}));
+    save();
+  }catch(e){}
+})();
+
+/* ============ MERGE (field-group, latest-ts wins) ============ */
+const GROUPS=[
+  {ts:'morningTs',fields:['mood','energy','moodLabel','morningTs']},
+  {ts:'planTs',fields:['mit','trigger','obstacle','planTs']},
+  {ts:'eveningTs',fields:['kept','note','eveningTs']}
+];
+function mergeDB(a,b){
+  const out=blankDB();
+  const keys=new Set([...Object.keys(a.days||{}),...Object.keys(b.days||{})]);
+  keys.forEach(k=>{
+    const ra=a.days[k]||{},rb=b.days[k]||{},m={};
+    GROUPS.forEach(g=>{
+      const ta=ra[g.ts]||0,tb=rb[g.ts]||0;
+      const src=tb>ta?rb:ra;
+      if(src[g.ts])g.fields.forEach(f=>{if(src[f]!==undefined)m[f]=src[f]});
+    });
+    if(Object.keys(m).length)out.days[k]=m;
+  });
+  const dmap={};
+  [...(a.deep||[]),...(b.deep||[])].forEach(s=>{
+    if(!dmap[s.date]||(s.ts||0)>(dmap[s.date].ts||0))dmap[s.date]=s;
+  });
+  out.deep=Object.values(dmap).sort((x,y)=>x.date<y.date?-1:1);
+  return out;
+}
+
+/* ============ GIST SYNC ============ */
+const GFILE='levelup-data.json';
+let syncBusy=false;
+function setDot(s,msg){const d=document.getElementById('syncDot');d.className=s;d.title=msg||s;
+  const t=document.getElementById('syncStatusText');if(t)t.textContent=msg||'';}
+function ghHeaders(){return{'Authorization':'Bearer '+CFG.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}}
+async function createGist(){
+  CFG.token=document.getElementById('ghToken').value.trim()||CFG.token;
+  if(!CFG.token){alert('Paste a GitHub token first.');return}
+  setDot('busy','Creating database…');
+  try{
+    const r=await fetch('https://api.github.com/gists',{method:'POST',headers:ghHeaders(),
+      body:JSON.stringify({description:'LevelUp personal database',public:false,
+        files:{[GFILE]:{content:JSON.stringify(DB)}}})});
+    if(!r.ok)throw Error('GitHub said '+r.status);
+    const j=await r.json();
+    CFG.gistId=j.id;saveCfg();
+    document.getElementById('gistId').value=j.id;
+    setDot('ok','Database created. Copy the Gist ID to your other device: '+j.id);
+  }catch(e){setDot('err','Create failed: '+e.message)}
+}
+function saveSync(){
+  CFG.token=document.getElementById('ghToken').value.trim();
+  CFG.gistId=document.getElementById('gistId').value.trim();
+  saveCfg();syncNow(true);
+}
+async function syncNow(verbose){
+  if(!CFG.token||!CFG.gistId){if(verbose)setDot('err','Token and Gist ID required.');return}
+  if(syncBusy)return;syncBusy=true;setDot('busy','Syncing…');
+  try{
+    const r=await fetch('https://api.github.com/gists/'+CFG.gistId,{headers:ghHeaders()});
+    if(!r.ok)throw Error('fetch '+r.status);
+    const j=await r.json();
+    let remote=blankDB();
+    try{remote=Object.assign(blankDB(),JSON.parse(j.files[GFILE].content))}catch(e){}
+    DB=mergeDB(DB,remote);save();
+    const p=await fetch('https://api.github.com/gists/'+CFG.gistId,{method:'PATCH',headers:ghHeaders(),
+      body:JSON.stringify({files:{[GFILE]:{content:JSON.stringify(DB)}}})});
+    if(!p.ok)throw Error('push '+p.status);
+    setDot('ok','Synced '+new Date().toLocaleTimeString());
+    renderAll();
+  }catch(e){setDot('err','Sync failed: '+e.message)}
+  finally{syncBusy=false}
+}
+function pushSoon(){save();if(CFG.token&&CFG.gistId){clearTimeout(pushSoon.t);pushSoon.t=setTimeout(()=>syncNow(false),800)}}
+
+/* ============ NAV ============ */
+function show(v){
+  ['daily','deep','history','playbook','settings'].forEach(x=>{
+    document.getElementById('view-'+x).classList.toggle('hidden',x!==v);
+    document.getElementById('tab-'+x).classList.toggle('active',x===v);
+  });
+  if(v==='history')renderHistory();
+  if(v==='deep')renderDeep();
+  if(v==='settings'){document.getElementById('ghToken').value=CFG.token||'';document.getElementById('gistId').value=CFG.gistId||''}
+}
+
+/* ============ STREAK ============ */
+function dayDone(k){const r=DB.days[k];return r&&(r.morningTs||r.eveningTs)}
+function streak(){
+  let s=0,d=new Date();
+  if(!dayDone(todayK()))d.setDate(d.getDate()-1);
+  while(true){const k=d.toISOString().slice(0,10);if(dayDone(k)){s++;d.setDate(d.getDate()-1)}else break}
+  return s;
+}
+function updStreak(){document.getElementById('streakNum').textContent=streak()}
+
+/* ============ CONSTANTS ============ */
+const OBSTACLES=[
+ "I'll start something more interesting instead",
+ "I'll tell myself I'll do it later",
+ "It feels too big / I don't know where to start",
+ "An impulse pulls me away (food, phone, markets, browsing)",
+ "Low energy / can't be bothered",
+ "A rabbit hole: over-researching instead of doing"
+];
+const IFTHEN={
+ "I'll start something more interesting instead":"write the interesting idea on a parking list and do 25 focused minutes on the commitment first.",
+ "I'll tell myself I'll do it later":"start a 10-minute timer immediately — starting, not finishing, is the contract.",
+ "It feels too big / I don't know where to start":"define the smallest shippable slice in one sentence and do only that.",
+ "An impulse pulls me away (food, phone, markets, browsing)":"name the impulse out loud, put the phone in another room, and surf the urge for 90 seconds before deciding.",
+ "Low energy / can't be bothered":"do a deliberately bad first version for 15 minutes — quality is tomorrow's problem.",
+ "A rabbit hole: over-researching instead of doing":"close all tabs and produce output from what I already know for 25 minutes."
+};
+
+/* ============ MORNING PULSE ============ */
+let AM={};
+function renderAM(){
+  const el=document.getElementById('amFlow');
+  const t=day(todayK());
+  document.getElementById('dailyDate').textContent=new Date().toDateString();
+  const badge=document.getElementById('amBadge');
+  if(t.morningTs){
+    badge.className='badge done';badge.textContent='done';
+    el.innerHTML=`
+      <p class="muted">Energy ${['','low','medium','high'][t.energy]} · Mood ${t.mood}/5${t.moodLabel?' · "'+esc(t.moodLabel)+'"':''}</p>
+      ${t.mit?`<div class="action"><b>Today's commitment (set last evening)</b>${esc(t.mit)}${t.trigger?'<br><span class="small">Start: '+esc(t.trigger)+'</span>':''}
+        ${t.obstacle?`<br><span class="small" style="color:var(--accent2)">If ${esc(t.obstacle.toLowerCase())} → I will ${esc(IFTHEN[t.obstacle]||'execute the plan.')}</span>`:''}</div>`
+        :'<p class="muted">No commitment was set for today. Tonight\'s review fixes that.</p>'}
+      <h3>Today's protocol</h3>
+      ${suggest(t).map(a=>`<div class="action"><b>${a.t}</b>${a.d}<div class="why">${a.w}</div></div>`).join('')}`;
+    return;
+  }
+  badge.className='badge todo';badge.textContent='open';
+  el.innerHTML=`
+    ${t.mit?`<p class="muted">Today's commitment: <i>"${esc(t.mit)}"</i></p>`:''}
+    <div class="q">Energy?</div>
+    <div class="opts">
+      <button onclick="amPick(this,'energy',1)">Low</button>
+      <button onclick="amPick(this,'energy',2)">Medium</button>
+      <button onclick="amPick(this,'energy',3)">High</button>
+    </div>
+    <div class="q">Mood? (1 = dark · 5 = great)</div>
+    <div class="opts">${[1,2,3,4,5].map(n=>`<button onclick="amPick(this,'mood',${n})">${n}</button>`).join('')}</div>
+    <div id="amLabelBox" class="hidden">
+      <div class="q">Name the feeling precisely — one sentence.</div>
+      <input type="text" id="amLabel" placeholder="e.g. flat and restless because X stalled">
+    </div>
+    <button class="btn green" onclick="submitAM()">Done</button>`;
+}
+function amPick(btn,k,v){AM[k]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
+  if(k==='mood')document.getElementById('amLabelBox').classList.toggle('hidden',v>2)}
+function submitAM(){
+  if(AM.energy===undefined||AM.mood===undefined){alert('Energy and mood required.');return}
+  const t=day(todayK());
+  t.energy=AM.energy;t.mood=AM.mood;
+  t.moodLabel=(document.getElementById('amLabel')||{}).value||'';
+  t.morningTs=Date.now();AM={};
+  pushSoon();updStreak();renderAM();
+}
+
+/* ============ EVENING REVIEW ============ */
+let PM={};
+function renderPM(){
+  const el=document.getElementById('pmFlow');
+  const t=day(todayK()),tm=day(offsetK(1));
+  const badge=document.getElementById('pmBadge');
+  if(t.eveningTs){
+    badge.className='badge done';badge.textContent='done';
+    el.innerHTML=`
+      ${t.mit?`<p class="muted">"${esc(t.mit)}" — ${t.kept>=1?'<span class="done">kept ✓</span>':t.kept===0.5?'<span style="color:var(--warn)">partly</span>':'<span class="notdone">missed</span>'}${t.note?' · '+esc(t.note):''}</p>`:''}
+      <div class="action"><b>Tomorrow is locked</b>${esc(tm.mit||'—')}
+        ${tm.trigger?'<br><span class="small">Start: '+esc(tm.trigger)+'</span>':''}
+        ${tm.obstacle?`<br><span class="small" style="color:var(--accent2)">If ${esc(tm.obstacle.toLowerCase())} → I will ${esc(IFTHEN[tm.obstacle]||'execute the plan.')}</span>`:''}
+      </div>
+      <p class="small">Tomorrow morning: 30-second pulse on the phone. The decision is already made — that's the point.</p>`;
+    return;
+  }
+  badge.className='badge todo';badge.textContent='open';
+  el.innerHTML=`
+    ${t.mit?`
+      <div class="q">Today's commitment was: <i>"${esc(t.mit)}"</i> — did it happen?</div>
+      <div class="opts">
+        <button onclick="pmPick(this,'kept',1)">Yes</button>
+        <button onclick="pmPick(this,'kept',0.5)">Partly</button>
+        <button onclick="pmPick(this,'kept',0)">No</button>
+      </div>
+      <div class="q">One line: what made the difference today? <span class="small">(optional)</span></div>
+      <input type="text" id="pmNote">`
+      :'<p class="muted">No commitment was set for today — start the loop by planning tomorrow.</p>'}
+    <h3>Plan tomorrow</h3>
+    <div class="q">The ONE thing tomorrow. If only this gets done, the day counts.</div>
+    <input type="text" id="pmMit" placeholder="Concrete and finishable">
+    <div class="q">When and where will you start it?</div>
+    <input type="text" id="pmTrigger" placeholder="e.g. 'At 09:00 at the desk, right after coffee'">
+    <div class="q">Most likely failure mode?</div>
+    <select id="pmObstacle">${OBSTACLES.map(o=>`<option>${o}</option>`).join('')}</select>
+    <button class="btn green" onclick="submitPM()">Lock tomorrow in</button>`;
+}
+function pmPick(btn,k,v){PM[k]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
+function submitPM(){
+  const t=day(todayK()),tm=day(offsetK(1));
+  const mit=document.getElementById('pmMit').value.trim();
+  if(!mit){alert('Tomorrow\'s ONE thing is required — it\'s the whole mechanism.');return}
+  if(t.mit&&PM.kept===undefined){alert('Answer whether today\'s commitment happened.');return}
+  if(t.mit){t.kept=PM.kept;t.note=(document.getElementById('pmNote')||{}).value||''}
+  t.eveningTs=Date.now();
+  tm.mit=mit;tm.trigger=document.getElementById('pmTrigger').value.trim();
+  tm.obstacle=document.getElementById('pmObstacle').value;tm.planTs=Date.now();
+  PM={};pushSoon();updStreak();renderPM();
+}
+
+/* ============ SUGGESTION ENGINE ============ */
+function suggest(t){
+  const out=[];
+  const dn=new Date().getDate();
+  const exec=[
+    {t:"Timebox it: 25 minutes, visible timer",d:"Open-ended tasks feed your Immoderation (15/20). A fixed box turns grind into a finishable unit.",w:"Situational self-control (Duckworth 2016): restructure the task, don't fight the urge."},
+    {t:"Architect the environment first (2 min)",d:"Phone in another room, one window open, the file already loaded. Make starting the path of least resistance.",w:"Environment design beats in-the-moment willpower — and design is your 20/20 strength."},
+    {t:"Stake it",d:"One sentence: what does skipping this cost in 12 months?",w:"Loss framing leverages your risk appetite (7.86/9) and internal locus of control."},
+    {t:"Worst version first",d:"Produce a deliberately bad version in 15 minutes. Quality pass later.",w:"Initiation, not ability, is the bottleneck (Self-Discipline 9/20 vs Intellect 20/20)."}
+  ];
+  out.push(exec[dn%exec.length]);
+  if(t.energy===1){
+    out.push({t:"Move before you push",
+      d:"10–15 minutes brisk walk before the main task. Not optional on low-energy days.",
+      w:"Exercise rivals antidepressants for mild low mood; kinesthetic is your blind spot, so marginal returns are highest."});
+  }
+  if(t.mood<=2){
+    out.push({t:"Behavioral activation: one mastery + one pleasure block today",
+      d:"Mood follows action. Calendar one competence activity and one genuinely enjoyable one — now, before work starts.",
+      w:"BA meta-analysis: SMD −0.74, equal to CBT (Ekers 2014). Low moods are data, not weather."});
+    out.push({t:"One reappraisal rep",
+      d:"Take the dominant negative thought and write the strongest alternative reading a smart skeptic would give.",
+      w:"Reappraisal has the best long-run outcomes; yours is mid-range (4.5/7) and trainable."});
+  } else if(t.mood===3){
+    out.push({t:"One pleasure block, booked",
+      d:"Your satisfaction (21/35) lags your flourishing (47/56) — the gap is under-invested enjoyment. Book one thing you actually enjoy today.",
+      w:"Behavioral activation works prophylactically."});
+  }
+  if(t.energy===3&&t.mood>=4){
+    out.push({t:"Spend the surplus deliberately",
+      d:"High energy + good mood is rare capital. Attack the most avoided item, not the most interesting one.",
+      w:"Peak states are when low Self-Discipline matters least. Allocate like a portfolio manager."});
+  }
+  return out.slice(0,3);
+}
+
+/* ============ DEEP SESSION ============ */
+let DS={};
+function renderDeep(){
+  const el=document.getElementById('deepFlow');
+  const last=DB.deep[DB.deep.length-1];
+  if(last&&last.date===todayK()){el.innerHTML=deepSummaryHTML(last);return}
+  const days=lastN(7),checkins=days.filter(k=>DB.days[k]&&(DB.days[k].morningTs||DB.days[k].eveningTs));
+  const keptDays=days.filter(k=>DB.days[k]&&DB.days[k].kept!==undefined);
+  const kept=keptDays.filter(k=>DB.days[k].kept>=1).length;
+  const partly=keptDays.filter(k=>DB.days[k].kept===0.5).length;
+  const moods=days.map(k=>(DB.days[k]||{}).mood).filter(m=>m!==undefined);
+  const avgMood=moods.length?(moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1):'–';
+  el.innerHTML=`
+    <h2>Week in review</h2>
+    <div class="statrow">
+      <div class="stat"><div class="v">${checkins.length}/7</div><div class="l">Check-ins</div></div>
+      <div class="stat"><div class="v">${kept}${partly?'+'+partly+'½':''}</div><div class="l">Kept</div></div>
+      <div class="stat"><div class="v">${avgMood}</div><div class="l">Avg mood</div></div>
+    </div>
+    <div class="q">Three wins this week — concrete, no modesty (not your problem anyway)</div>
+    <textarea id="wins" rows="3"></textarea>
+    <div class="q">One honest lesson: where did execution break, and what was the real mechanism?</div>
+    <textarea id="lesson" rows="2"></textarea>
+    <h3>WOOP next week's #1 goal</h3>
+    <div class="q">Wish — the one outcome that matters most next week</div>
+    <input type="text" id="wish">
+    <div class="q">Outcome — what does Friday look like if it lands?</div>
+    <input type="text" id="outcome">
+    <div class="q">Obstacle — the INNER obstacle. Not circumstances.</div>
+    <input type="text" id="obst" placeholder="e.g. I'll chase a newer, shinier idea by Tuesday">
+    <div class="q">Plan — If [obstacle], then I will…</div>
+    <input type="text" id="plan">
+    <h3>Behavioral activation — book the week</h3>
+    <p class="small">Two mastery + two pleasure blocks. Calendar them after saving.</p>
+    <div class="row2">
+      <div><div class="q">Mastery 1</div><input type="text" id="m1"></div>
+      <div><div class="q">Mastery 2</div><input type="text" id="m2"></div>
+    </div>
+    <div class="row2">
+      <div><div class="q">Pleasure 1</div><input type="text" id="p1"></div>
+      <div><div class="q">Pleasure 2</div><input type="text" id="p2"></div>
+    </div>
+    <h3>Stress pulse (PSS-4)</h3>
+    <div class="scale">
+      ${["In the last week, how often have you felt unable to control the important things in your life?",
+         "…felt confident about your ability to handle your personal problems? (reverse)",
+         "…felt that things were going your way? (reverse)",
+         "…felt difficulties were piling up so high that you could not overcome them?"]
+        .map((q,i)=>`<label>${q}</label><div class="opts" id="pss${i}">${[0,1,2,3,4].map(v=>`<button onclick="pssPick(${i},${v},this)">${v}</button>`).join('')}</div>`).join('')}
+      <p class="small">0 = never · 4 = very often</p>
+    </div>
+    <button class="btn green" onclick="submitDeep()">Save deep session</button>`;
+  DS={pss:[null,null,null,null]};
+}
+function pssPick(i,v,btn){DS.pss[i]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
+function submitDeep(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('wish')){alert('At minimum, complete the WOOP wish.');return}
+  let pssScore=null;
+  if(!DS.pss.includes(null))pssScore=DS.pss[0]+(4-DS.pss[1])+(4-DS.pss[2])+DS.pss[3];
+  DB.deep.push({date:todayK(),wins:g('wins'),lesson:g('lesson'),
+    woop:{wish:g('wish'),outcome:g('outcome'),obstacle:g('obst'),plan:g('plan')},
+    ba:{m1:g('m1'),m2:g('m2'),p1:g('p1'),p2:g('p2')},pss:pssScore,ts:Date.now()});
+  pushSoon();renderDeep();
+}
+function deepSummaryHTML(s){
+  let pssTxt='not measured';
+  if(s.pss!==null)pssTxt=s.pss+'/16 — '+(s.pss<=5?'low; consistent with your baseline calm':s.pss<=8?'moderate; matches your slightly-elevated baseline. Watch sleep and movement.':'elevated; prioritize recovery this week — your low moods hide well, including from you');
+  return `
+    <h2>This week's contract <span class="done">✓ saved</span></h2>
+    <div class="action"><b>WOOP</b>
+      Wish: ${esc(s.woop.wish)}<br>Outcome: ${esc(s.woop.outcome)}<br>
+      Inner obstacle: ${esc(s.woop.obstacle)}<br>
+      <span style="color:var(--accent2)">If ${esc(s.woop.obstacle||'it appears')}, then ${esc(s.woop.plan||'execute the plan')}.</span></div>
+    <div class="action"><b>Booked blocks</b>
+      Mastery: ${esc(s.ba.m1||'—')} · ${esc(s.ba.m2||'—')}<br>
+      Pleasure: ${esc(s.ba.p1||'—')} · ${esc(s.ba.p2||'—')}
+      <div class="why">Unbooked = unbuilt. Calendar them now.</div></div>
+    <div class="action"><b>Stress pulse</b> ${pssTxt}</div>
+    <p class="small">Next deep session unlocks tomorrow.</p>`;
+}
+
+/* ============ HISTORY ============ */
+function lastN(n){const a=[];const d=new Date();for(let i=0;i<n;i++){a.unshift(d.toISOString().slice(0,10));d.setDate(d.getDate()-1)}return a}
+function renderHistory(){
+  const days=lastN(30);
+  const have=days.map(k=>DB.days[k]).filter(r=>r&&(r.morningTs||r.eveningTs));
+  const keptVals=have.filter(r=>r.kept!==undefined);
+  const rate=keptVals.length?Math.round(100*keptVals.reduce((a,r)=>a+r.kept,0)/keptVals.length)+'%':'–';
+  const avg=k=>{const v=have.map(r=>r[k]).filter(x=>x!==undefined);return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1):'–'};
+  document.getElementById('stExec').textContent=rate;
+  document.getElementById('stMood').textContent=avg('mood');
+  document.getElementById('stEnergy').textContent=avg('energy');
+  document.getElementById('stCheckins').textContent=have.length+'/30';
+  drawChart(days);
+  document.getElementById('histList').innerHTML=days.slice().reverse()
+    .filter(k=>DB.days[k]&&(DB.days[k].morningTs||DB.days[k].eveningTs||DB.days[k].mit)).map(k=>{
+    const r=DB.days[k];
+    const kept=r.kept===undefined?'':r.kept>=1?' <span class="done">✓ kept</span>':r.kept===0.5?' <span style="color:var(--warn)">½ partly</span>':' <span class="notdone">✗ missed</span>';
+    return `<div class="histitem"><b>${k}</b>${r.mood?' · mood '+r.mood:''}${r.energy?' · energy '+r.energy:''}
+      ${r.mit?'<br>'+esc(r.mit)+kept:''}
+      ${r.note?'<br><span class="small">note: '+esc(r.note)+'</span>':''}
+      ${r.moodLabel?'<br><span class="small">felt: '+esc(r.moodLabel)+'</span>':''}</div>`;
+  }).join('')||'<p class="muted">No check-ins yet.</p>';
+  document.getElementById('deepList').innerHTML=DB.deep.slice().reverse().map(s=>
+    `<div class="histitem"><b>${s.date}</b> · WOOP: ${esc(s.woop.wish)}${s.pss!==null&&s.pss!==undefined?' · PSS-4: '+s.pss+'/16':''}<br><span class="small">${esc(s.lesson||'')}</span></div>`
+  ).join('')||'<p class="muted">No deep sessions yet.</p>';
+}
+function drawChart(days){
+  const c=document.getElementById('chart');const W=c.width=(c.offsetWidth||700)*2;const H=c.height=360;
+  const ctx=c.getContext('2d');if(!ctx)return;ctx.clearRect(0,0,W,H);
+  const pad=20,n=days.length,step=(W-2*pad)/(n-1);
+  const ym=v=>H-40-((v-1)/4)*(H-80);
+  const ye=v=>H-40-((v-1)/2)*(H-80);
+  const line=(get,color,fn)=>{
+    ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();let started=false;
+    days.forEach((k,i)=>{const r=DB.days[k];if(!r||get(r)===undefined)return;const y=fn(get(r));
+      if(!started){ctx.moveTo(pad+i*step,y);started=true}else ctx.lineTo(pad+i*step,y);
+      ctx.fillStyle=color;ctx.fillRect(pad+i*step-3,y-3,6,6);});
+    ctx.stroke();};
+  line(r=>r.mood,'#5b8cff',ym);
+  line(r=>r.energy,'#3ddc97',ye);
+  days.forEach((k,i)=>{const r=DB.days[k];if(!r||r.kept===undefined)return;
+    ctx.fillStyle=r.kept>=1?'#3ddc97':r.kept===0.5?'#ffb454':'#ff6b6b';
+    ctx.beginPath();ctx.arc(pad+i*step,H-15,5,0,7);ctx.fill();});
+}
+
+/* ============ EXPORT / IMPORT ============ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='levelup-data-'+todayK()+'.json';a.click();
+}
+function importData(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=e=>{const f=e.target.files[0];const r=new FileReader();
+    r.onload=()=>{try{DB=mergeDB(DB,Object.assign(blankDB(),JSON.parse(r.result)));save();location.reload()}catch(err){alert('Invalid file')}};
+    r.readAsText(f)};
+  inp.click();
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ============ INIT ============ */
+function renderAll(){updStreak();renderAM();renderPM();
+  if(!document.getElementById('view-history').classList.contains('hidden'))renderHistory();
+  if(!document.getElementById('view-deep').classList.contains('hidden'))renderDeep();}
+renderAll();
+if(CFG.token&&CFG.gistId)syncNow(false);else setDot('','No sync configured — Sync tab to set up.');
+</script>
+</body>
+</html>
