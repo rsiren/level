@@ -5,95 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>LevelUp — Ralf</title>
+<meta name="theme-color" content="#0a0e18">
+<title>LevelUp</title>
 <style>
   :root{
-    --bg:#0f1117; --panel:#181b24; --panel2:#1f2330; --border:#2a2f3e;
-    --text:#e8eaf0; --muted:#9aa1b5; --accent:#5b8cff; --accent2:#3ddc97;
-    --warn:#ffb454; --bad:#ff6b6b; --radius:12px;
+    --bg:#0a0e18; --panel:#151d31; --panel2:#1c2742; --border:rgba(255,255,255,.07);
+    --text:#eef1f7; --muted:#8d97ad; --teal:#5fd4c4; --blue:#7aa2ff; --gold:#e8c476;
+    --warn:#f4b86a; --bad:#f4756b; --radius:22px;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:60px}
-  .wrap{max-width:760px;margin:0 auto;padding:24px 16px}
-  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
-  h1{font-size:21px;letter-spacing:.3px}
-  h1 span{color:var(--accent)}
-  .hright{display:flex;gap:8px;align-items:center}
-  .streak{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:13px;color:var(--muted);white-space:nowrap}
-  .streak b{color:var(--accent2);font-size:17px}
-  #syncDot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block}
-  #syncDot.ok{background:var(--accent2)} #syncDot.err{background:var(--bad)} #syncDot.busy{background:var(--warn)}
-  nav{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
-  nav button{flex:1;min-width:90px;background:var(--panel);color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);padding:10px 4px;font-size:13.5px;cursor:pointer}
-  nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-  .card h2{font-size:17px;margin-bottom:10px}
-  .card h3{font-size:15px;margin:14px 0 6px;color:var(--accent)}
-  .q{font-size:15px;margin:14px 0 8px;font-weight:600}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{background:var(--bg)}
+  body{
+    background:
+      radial-gradient(1100px 700px at 15% -10%, rgba(53,86,160,.28), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(95,212,196,.07), transparent 55%),
+      linear-gradient(180deg,#0c1322 0%,#0a0e18 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:max(22px,env(safe-area-inset-top)) 18px 0}
+
+  /* ---------- header ---------- */
+  .greet{font-size:27px;font-weight:300;letter-spacing:.2px}
+  .greet b{font-weight:600}
+  .sub{font-size:13px;color:var(--muted);margin:2px 0 18px;display:flex;align-items:center;gap:8px}
+  #syncDot{width:8px;height:8px;border-radius:50%;background:#3a4763;display:inline-block;flex:none}
+  #syncDot.ok{background:var(--teal);box-shadow:0 0 8px rgba(95,212,196,.6)}
+  #syncDot.err{background:var(--bad)} #syncDot.busy{background:var(--warn)}
+
+  /* ---------- score card ---------- */
+  .scorecard{
+    background:linear-gradient(160deg,#1a2440 0%,#141c31 70%);
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:24px 18px 18px;margin-bottom:16px;
+    display:flex;justify-content:space-around;align-items:flex-end;gap:6px;
+    box-shadow:0 18px 40px -22px rgba(0,0,0,.8);
+  }
+  .ringbox{text-align:center}
+  .ringbox .rl{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.6px;margin-top:8px}
+  .ringwrap{position:relative;display:inline-block}
+  .ringval{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ringval .n{font-weight:200}
+  .ringval .u{font-size:10px;color:var(--muted);letter-spacing:1px}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:linear-gradient(170deg,#18213a 0%,#141c31 80%);
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;margin-bottom:16px;
+    box-shadow:0 14px 34px -24px rgba(0,0,0,.75);
+  }
+  .card h2{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3{font-size:12px;font-weight:600;margin:18px 0 4px;color:var(--teal);text-transform:uppercase;letter-spacing:1.6px}
+  .cardtitle{font-size:19px;font-weight:500;margin-bottom:6px}
+  .q{font-size:15px;margin:16px 0 9px;font-weight:500}
+  .step-ind{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+
+  /* ---------- inputs ---------- */
   .opts{display:flex;gap:8px;flex-wrap:wrap}
-  .opts button{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 16px;cursor:pointer;font-size:14px;min-width:46px}
-  .opts button.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
-  textarea,input[type=text],input[type=password]{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:11px;font-size:14px;font-family:inherit;resize:vertical}
-  select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:14px;width:100%}
-  .btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:15px;cursor:pointer;margin-top:14px}
-  .btn.green{background:var(--accent2);color:#0f1117;font-weight:600}
-  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .opts button{
+    background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);
+    border-radius:999px;padding:11px 18px;cursor:pointer;font-size:14px;min-width:48px;
+    transition:all .18s;
+  }
+  .opts button.sel{background:var(--teal);color:#0a0e18;border-color:var(--teal);font-weight:600;box-shadow:0 6px 18px -6px rgba(95,212,196,.5)}
+  textarea,input[type=text],input[type=password]{
+    width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);
+    border-radius:14px;padding:13px 14px;font-size:15px;font-family:inherit;resize:vertical;outline:none;
+  }
+  textarea:focus,input:focus{border-color:rgba(95,212,196,.45)}
+  select{
+    width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);
+    border-radius:14px;padding:12px;font-size:14px;outline:none;
+    -webkit-appearance:none;appearance:none;
+  }
+  .btn{
+    width:100%;background:linear-gradient(135deg,#5fd4c4,#53b9d8);color:#08111d;border:none;
+    border-radius:999px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;margin-top:18px;
+    box-shadow:0 10px 26px -10px rgba(95,212,196,.45);transition:transform .12s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:rgba(255,255,255,.06);color:var(--text);box-shadow:none;border:1px solid var(--border)}
+
+  /* ---------- content bits ---------- */
   .muted{color:var(--muted);font-size:13.5px}
-  .small{font-size:13px;color:var(--muted)}
-  .action{background:var(--panel2);border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0}
-  .action b{display:block;margin-bottom:3px}
-  .action .why{font-size:12.5px;color:var(--muted);margin-top:5px;font-style:italic}
-  .badge{display:inline-block;border-radius:20px;padding:2px 12px;font-size:12px;font-weight:600;margin-left:8px}
-  .badge.done{background:rgba(61,220,151,.15);color:var(--accent2)}
-  .badge.todo{background:rgba(255,180,84,.15);color:var(--warn)}
-  .statrow{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
-  .stat{flex:1;min-width:90px;background:var(--panel2);border-radius:8px;padding:10px;text-align:center}
-  .stat .v{font-size:22px;font-weight:700;color:var(--accent)}
-  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .done{color:var(--accent2)} .notdone{color:var(--bad)}
-  .histitem{border-bottom:1px solid var(--border);padding:10px 0;font-size:14px}
+  .small{font-size:12.5px;color:var(--muted)}
+  .action{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);
+    border-radius:16px;padding:14px 16px;margin:10px 0;position:relative;overflow:hidden;
+  }
+  .action::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--teal),var(--blue))}
+  .action b{display:block;margin-bottom:3px;font-size:14.5px}
+  .action{font-size:14px}
+  .action .why{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic}
+  .badge{display:inline-block;border-radius:999px;padding:3px 12px;font-size:11px;font-weight:600;letter-spacing:.5px}
+  .badge.done{background:rgba(95,212,196,.14);color:var(--teal)}
+  .badge.todo{background:rgba(244,184,106,.14);color:var(--warn)}
+  .statrow{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+  .stat{flex:1;min-width:88px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:12px 8px;text-align:center}
+  .stat .v{font-size:24px;font-weight:200;color:var(--text)}
+  .stat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px}
+  .done{color:var(--teal)} .notdone{color:var(--bad)}
+  .histitem{border-bottom:1px solid var(--border);padding:12px 0;font-size:14px}
   .histitem:last-child{border:none}
-  canvas{width:100%;background:var(--panel2);border-radius:8px}
-  .step-ind{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-  details{margin:10px 0;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+  canvas{width:100%;background:rgba(255,255,255,.03);border-radius:16px}
+  details{margin:10px 0;border:1px solid var(--border);border-radius:16px;padding:12px 16px;background:rgba(255,255,255,.02)}
   summary{cursor:pointer;font-weight:600;font-size:14.5px}
   details p,details li{font-size:13.5px;color:var(--muted);margin-top:8px}
   details ul,details ol{margin-left:18px;margin-top:6px}
-  details code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:12.5px}
+  details code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:6px;font-size:12.5px}
   .hidden{display:none}
-  .scale label{display:block;font-size:13.5px;color:var(--muted);margin:10px 0 4px}
+  .scale label{display:block;font-size:13.5px;color:var(--muted);margin:12px 0 6px}
   .row2{display:flex;gap:10px;flex-wrap:wrap}.row2>*{flex:1;min-width:150px}
-  .footer-tools{margin-top:30px;text-align:center}
+  .footer-tools{margin:26px 0 10px;text-align:center}
   .footer-tools button{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;margin:0 8px}
+
+  /* ---------- bottom nav ---------- */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-around;align-items:flex-start;
+    background:rgba(12,17,30,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    padding:10px 6px calc(12px + env(safe-area-inset-bottom));
+  }
+  nav button{
+    background:none;border:none;color:#5d6880;cursor:pointer;flex:1;max-width:110px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;letter-spacing:.4px;
+  }
+  nav button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  nav button.active{color:var(--teal)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Level<span>Up</span> <span class="small" id="devLabel"></span></h1>
-    <div class="hright">
-      <span id="syncDot" title="sync status"></span>
-      <div class="streak">Streak <b id="streakNum">0</b></div>
-    </div>
-  </header>
+  <div class="greet" id="greet">Good evening, <b>Ralf</b></div>
+  <div class="sub"><span id="syncDot"></span><span id="subLine"></span><span class="small" id="devLabel"></span></div>
 
-  <nav>
-    <button id="tab-daily" class="active" onclick="show('daily')">Daily</button>
-    <button id="tab-deep" onclick="show('deep')">Deep Session</button>
-    <button id="tab-history" onclick="show('history')">History</button>
-    <button id="tab-playbook" onclick="show('playbook')">Playbook</button>
-    <button id="tab-settings" onclick="show('settings')">Sync</button>
-  </nav>
+  <!-- ====== SCORE RINGS ====== -->
+  <div class="scorecard" id="scorecard"></div>
 
   <!-- ================= DAILY ================= -->
   <div id="view-daily">
     <div class="card">
-      <div class="step-ind" id="dailyDate"></div>
-      <h2>Morning pulse <span class="small">· 30 sec, phone</span> <span id="amBadge" class="badge todo">open</span></h2>
+      <h2>Morning pulse <span class="small">· 30 sec · phone</span> <span id="amBadge" class="badge todo">open</span></h2>
       <div id="amFlow"></div>
     </div>
     <div class="card">
-      <h2>Evening review <span class="small">· after work, Mac</span> <span id="pmBadge" class="badge todo">open</span></h2>
+      <h2>Evening review <span class="small">· after work · mac</span> <span id="pmBadge" class="badge todo">open</span></h2>
       <div id="pmFlow"></div>
     </div>
   </div>
@@ -101,7 +162,7 @@
   <!-- ================= DEEP ================= -->
   <div id="view-deep" class="hidden">
     <div class="card">
-      <div class="step-ind">Weekend deep session · ~15 min</div>
+      <h2>Weekend deep session <span class="small">· ~15 min</span></h2>
       <div id="deepFlow"></div>
     </div>
   </div>
@@ -117,7 +178,7 @@
         <div class="stat"><div class="v" id="stCheckins">–</div><div class="l">Check-ins</div></div>
       </div>
       <canvas id="chart" height="180"></canvas>
-      <p class="small" style="margin-top:6px">Blue = mood · Green = energy · Bottom dots = commitment kept / partly / missed</p>
+      <p class="small" style="margin-top:8px">Blue = mood · Teal = energy · Bottom dots = commitment kept / partly / missed</p>
     </div>
     <div class="card"><h2>Daily log</h2><div id="histList"></div></div>
     <div class="card"><h2>Deep sessions</h2><div id="deepList"></div></div>
@@ -126,7 +187,8 @@
   <!-- ================= PLAYBOOK ================= -->
   <div id="view-playbook" class="hidden">
     <div class="card">
-      <h2>Design rationale</h2>
+      <h2>Playbook</h2>
+      <div class="cardtitle">Design rationale</div>
       <p class="muted">Built on your 24-test profile. Two targets: the execution gap (Self-Discipline 9/20 vs Intellect 20/20) and the hidden low-mood/stress pattern (Depression facet 13/20, PSS 25/56, emotional awareness 7/20). Everything is a self-experiment — your autonomy and internal locus of control reject imposed regimes.</p>
       <details><summary>The daily structure</summary>
         <ul>
@@ -161,36 +223,54 @@
   <!-- ================= SETTINGS / SYNC ================= -->
   <div id="view-settings" class="hidden">
     <div class="card">
-      <h2>Sync pipeline</h2>
-      <p class="muted">Data lives in a private GitHub Gist — a JSON document both devices read and write. Works offline; syncs when online. The same database can later feed new features (weekly email digests, charts, an LLM coach reading your history).</p>
+      <h2>Sync</h2>
+      <div class="cardtitle">Data pipeline</div>
+      <p class="muted">Data lives in a private GitHub Gist — a JSON document both devices read and write. Works offline; syncs when online.</p>
       <div id="syncStatusText" class="small" style="margin:8px 0"></div>
       <div class="q">GitHub token <span class="small">(fine-grained, Gists read/write only)</span></div>
       <input type="password" id="ghToken" placeholder="github_pat_…">
       <div class="q">Gist ID <span class="small">(leave empty on first device — use Create database)</span></div>
       <input type="text" id="gistId" placeholder="e.g. 4f3c2a…">
+      <button class="btn" onclick="saveSync()">Save & connect</button>
       <div class="row2">
-        <button class="btn" onclick="saveSync()">Save & connect</button>
-        <button class="btn ghost" onclick="createGist()">Create database (first device)</button>
+        <button class="btn ghost" onclick="createGist()">Create database</button>
         <button class="btn ghost" onclick="syncNow(true)">Sync now</button>
       </div>
       <details><summary>One-time setup (5 min)</summary>
         <ol>
           <li>On github.com: Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate. Account permissions → <b>Gists: Read and write</b>. Nothing else. Long expiry.</li>
           <li>Paste the token above → <b>Create database</b>. This makes a private Gist and fills in the Gist ID.</li>
-          <li>On the iPhone: open this same page, paste the same token and Gist ID → <b>Save & connect</b>. Then Share → <b>Add to Home Screen</b> for an app icon.</li>
-          <li>To open this page on the phone, host it (GitHub Pages: new repo → upload this file as <code>index.html</code> → Settings → Pages → deploy from main) or AirDrop the file and open in Safari via the Files app.</li>
+          <li>On the iPhone: open this same page, paste the same token and Gist ID → <b>Save & connect</b>. Then Share → <b>Add to Home Screen</b>.</li>
         </ol>
         <p>The token is stored only in this browser's localStorage on your devices, scoped to Gists only.</p>
       </details>
+      <div class="footer-tools">
+        <button onclick="exportData()">Export</button>
+        <button onclick="importData()">Import</button>
+        <button onclick="if(confirm('Wipe ALL local data on this device? (Gist untouched)')){localStorage.removeItem(KEY);location.reload()}">Reset device</button>
+      </div>
     </div>
   </div>
-
-  <div class="footer-tools">
-    <button onclick="exportData()">Export</button>
-    <button onclick="importData()">Import</button>
-    <button onclick="if(confirm('Wipe ALL local data on this device? (Gist untouched)')){localStorage.removeItem(KEY);location.reload()}">Reset device</button>
-  </div>
 </div>
+
+<!-- ====== BOTTOM NAV ====== -->
+<nav>
+  <button id="tab-daily" class="active" onclick="show('daily')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+    Daily</button>
+  <button id="tab-deep" onclick="show('deep')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>
+    Deep</button>
+  <button id="tab-history" onclick="show('history')">
+    <svg viewBox="0 0 24 24"><path d="M4 19V11M10 19V5M16 19v-9M21 19H3"/></svg>
+    Trends</button>
+  <button id="tab-playbook" onclick="show('playbook')">
+    <svg viewBox="0 0 24 24"><path d="M5 4h6a3 3 0 013 3v13a3 3 0 00-3-3H5zM19 4h-5a0 0 0 000 0v13a0 0 0 010 0h5z" /><path d="M5 4v13h6a3 3 0 013 3V7a3 3 0 00-3-3H5zM19 4v13h-5"/></svg>
+    Playbook</button>
+  <button id="tab-settings" onclick="show('settings')">
+    <svg viewBox="0 0 24 24"><path d="M7 17a5 5 0 01-.9-9.92A6 6 0 0118 8.5 4 4 0 0118 17z"/><path d="M12 12v6M9.5 15.5L12 18l2.5-2.5"/></svg>
+    Sync</button>
+</nav>
 
 <script>
 /* ============ CORE STORAGE ============ */
@@ -206,6 +286,12 @@ const offsetK=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOStri
 const day=k=>{if(!DB.days[k])DB.days[k]={};return DB.days[k]};
 const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
 document.getElementById('devLabel').textContent=isMobile?'· phone':'· mac';
+(function(){
+  const h=new Date().getHours();
+  const g=h<5?'Late night':h<11?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greet').innerHTML=g+', <b>Ralf</b>';
+  document.getElementById('subLine').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+})();
 
 /* migrate v1 */
 (function(){
@@ -223,7 +309,7 @@ document.getElementById('devLabel').textContent=isMobile?'· phone':'· mac';
   }catch(e){}
 })();
 
-/* ============ MERGE (field-group, latest-ts wins) ============ */
+/* ============ MERGE ============ */
 const GROUPS=[
   {ts:'morningTs',fields:['mood','energy','moodLabel','morningTs']},
   {ts:'planTs',fields:['mit','trigger','obstacle','planTs']},
@@ -301,12 +387,14 @@ function show(v){
     document.getElementById('view-'+x).classList.toggle('hidden',x!==v);
     document.getElementById('tab-'+x).classList.toggle('active',x===v);
   });
+  document.getElementById('scorecard').style.display=(v==='daily'||v==='history')?'flex':'none';
   if(v==='history')renderHistory();
   if(v==='deep')renderDeep();
   if(v==='settings'){document.getElementById('ghToken').value=CFG.token||'';document.getElementById('gistId').value=CFG.gistId||''}
+  window.scrollTo(0,0);
 }
 
-/* ============ STREAK ============ */
+/* ============ STREAK + RINGS ============ */
 function dayDone(k){const r=DB.days[k];return r&&(r.morningTs||r.eveningTs)}
 function streak(){
   let s=0,d=new Date();
@@ -314,7 +402,39 @@ function streak(){
   while(true){const k=d.toISOString().slice(0,10);if(dayDone(k)){s++;d.setDate(d.getDate()-1)}else break}
   return s;
 }
-function updStreak(){document.getElementById('streakNum').textContent=streak()}
+function ringSVG(pct,size,stroke,color,track){
+  const r=(size-stroke)/2, c=2*Math.PI*r;
+  const off=pct==null?c:c*(1-Math.max(0,Math.min(1,pct)));
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${track}" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .8s ease"/>
+  </svg>`;
+}
+function renderScore(){
+  const days=lastN(7);
+  const recs=days.map(k=>DB.days[k]).filter(Boolean);
+  const keptVals=recs.filter(r=>r.kept!==undefined);
+  const exec=keptVals.length?keptVals.reduce((a,r)=>a+r.kept,0)/keptVals.length:null;
+  const moods=recs.map(r=>r.mood).filter(x=>x!==undefined);
+  const energies=recs.map(r=>r.energy).filter(x=>x!==undefined);
+  const mAvg=moods.length?moods.reduce((a,b)=>a+b,0)/moods.length:null;
+  const eAvg=energies.length?energies.reduce((a,b)=>a+b,0)/energies.length:null;
+  const box=(label,pct,valTxt,unit,size,color)=>`
+    <div class="ringbox">
+      <div class="ringwrap">${ringSVG(pct,size,size>100?9:7,color,'rgba(255,255,255,.07)')}
+        <div class="ringval"><span class="n" style="font-size:${size>100?'34px':'21px'}">${valTxt}</span><span class="u">${unit}</span></div>
+      </div>
+      <div class="rl">${label}</div>
+    </div>`;
+  document.getElementById('scorecard').innerHTML=
+    box('Mood · 7d', mAvg==null?null:(mAvg-1)/4, mAvg==null?'–':mAvg.toFixed(1),'/ 5',88,'#7aa2ff')+
+    box('Execution · 7d', exec, exec==null?'–':Math.round(exec*100),'%',124,'url(#none)').replace('url(#none)','#5fd4c4')+
+    box('Streak', Math.min(1,streak()/7), streak(),'days',88,'#e8c476');
+  // energy not ringed to keep 3 rings; it lives in Trends
+  document.getElementById('streakNum')&&(document.getElementById('streakNum').textContent=streak());
+}
+function updStreak(){renderScore()}
 
 /* ============ CONSTANTS ============ */
 const OBSTACLES=[
@@ -339,14 +459,13 @@ let AM={};
 function renderAM(){
   const el=document.getElementById('amFlow');
   const t=day(todayK());
-  document.getElementById('dailyDate').textContent=new Date().toDateString();
   const badge=document.getElementById('amBadge');
   if(t.morningTs){
     badge.className='badge done';badge.textContent='done';
     el.innerHTML=`
-      <p class="muted">Energy ${['','low','medium','high'][t.energy]} · Mood ${t.mood}/5${t.moodLabel?' · "'+esc(t.moodLabel)+'"':''}</p>
+      <p class="muted" style="margin-top:8px">Energy ${['','low','medium','high'][t.energy]} · Mood ${t.mood}/5${t.moodLabel?' · "'+esc(t.moodLabel)+'"':''}</p>
       ${t.mit?`<div class="action"><b>Today's commitment (set last evening)</b>${esc(t.mit)}${t.trigger?'<br><span class="small">Start: '+esc(t.trigger)+'</span>':''}
-        ${t.obstacle?`<br><span class="small" style="color:var(--accent2)">If ${esc(t.obstacle.toLowerCase())} → I will ${esc(IFTHEN[t.obstacle]||'execute the plan.')}</span>`:''}</div>`
+        ${t.obstacle?`<br><span class="small" style="color:var(--teal)">If ${esc(t.obstacle.toLowerCase())} → I will ${esc(IFTHEN[t.obstacle]||'execute the plan.')}</span>`:''}</div>`
         :'<p class="muted">No commitment was set for today. Tonight\'s review fixes that.</p>'}
       <h3>Today's protocol</h3>
       ${suggest(t).map(a=>`<div class="action"><b>${a.t}</b>${a.d}<div class="why">${a.w}</div></div>`).join('')}`;
@@ -354,7 +473,7 @@ function renderAM(){
   }
   badge.className='badge todo';badge.textContent='open';
   el.innerHTML=`
-    ${t.mit?`<p class="muted">Today's commitment: <i>"${esc(t.mit)}"</i></p>`:''}
+    ${t.mit?`<p class="muted" style="margin-top:8px">Today's commitment: <i>"${esc(t.mit)}"</i></p>`:''}
     <div class="q">Energy?</div>
     <div class="opts">
       <button onclick="amPick(this,'energy',1)">Low</button>
@@ -367,7 +486,7 @@ function renderAM(){
       <div class="q">Name the feeling precisely — one sentence.</div>
       <input type="text" id="amLabel" placeholder="e.g. flat and restless because X stalled">
     </div>
-    <button class="btn green" onclick="submitAM()">Done</button>`;
+    <button class="btn" onclick="submitAM()">Done</button>`;
 }
 function amPick(btn,k,v){AM[k]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
   if(k==='mood')document.getElementById('amLabelBox').classList.toggle('hidden',v>2)}
@@ -389,10 +508,10 @@ function renderPM(){
   if(t.eveningTs){
     badge.className='badge done';badge.textContent='done';
     el.innerHTML=`
-      ${t.mit?`<p class="muted">"${esc(t.mit)}" — ${t.kept>=1?'<span class="done">kept ✓</span>':t.kept===0.5?'<span style="color:var(--warn)">partly</span>':'<span class="notdone">missed</span>'}${t.note?' · '+esc(t.note):''}</p>`:''}
+      ${t.mit?`<p class="muted" style="margin-top:8px">"${esc(t.mit)}" — ${t.kept>=1?'<span class="done">kept ✓</span>':t.kept===0.5?'<span style="color:var(--warn)">partly</span>':'<span class="notdone">missed</span>'}${t.note?' · '+esc(t.note):''}</p>`:''}
       <div class="action"><b>Tomorrow is locked</b>${esc(tm.mit||'—')}
         ${tm.trigger?'<br><span class="small">Start: '+esc(tm.trigger)+'</span>':''}
-        ${tm.obstacle?`<br><span class="small" style="color:var(--accent2)">If ${esc(tm.obstacle.toLowerCase())} → I will ${esc(IFTHEN[tm.obstacle]||'execute the plan.')}</span>`:''}
+        ${tm.obstacle?`<br><span class="small" style="color:var(--teal)">If ${esc(tm.obstacle.toLowerCase())} → I will ${esc(IFTHEN[tm.obstacle]||'execute the plan.')}</span>`:''}
       </div>
       <p class="small">Tomorrow morning: 30-second pulse on the phone. The decision is already made — that's the point.</p>`;
     return;
@@ -408,7 +527,7 @@ function renderPM(){
       </div>
       <div class="q">One line: what made the difference today? <span class="small">(optional)</span></div>
       <input type="text" id="pmNote">`
-      :'<p class="muted">No commitment was set for today — start the loop by planning tomorrow.</p>'}
+      :'<p class="muted" style="margin-top:8px">No commitment was set for today — start the loop by planning tomorrow.</p>'}
     <h3>Plan tomorrow</h3>
     <div class="q">The ONE thing tomorrow. If only this gets done, the day counts.</div>
     <input type="text" id="pmMit" placeholder="Concrete and finishable">
@@ -416,7 +535,7 @@ function renderPM(){
     <input type="text" id="pmTrigger" placeholder="e.g. 'At 09:00 at the desk, right after coffee'">
     <div class="q">Most likely failure mode?</div>
     <select id="pmObstacle">${OBSTACLES.map(o=>`<option>${o}</option>`).join('')}</select>
-    <button class="btn green" onclick="submitPM()">Lock tomorrow in</button>`;
+    <button class="btn" onclick="submitPM()">Lock tomorrow in</button>`;
 }
 function pmPick(btn,k,v){PM[k]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
 function submitPM(){
@@ -480,7 +599,7 @@ function renderDeep(){
   const moods=days.map(k=>(DB.days[k]||{}).mood).filter(m=>m!==undefined);
   const avgMood=moods.length?(moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1):'–';
   el.innerHTML=`
-    <h2>Week in review</h2>
+    <div class="cardtitle" style="margin-top:8px">Week in review</div>
     <div class="statrow">
       <div class="stat"><div class="v">${checkins.length}/7</div><div class="l">Check-ins</div></div>
       <div class="stat"><div class="v">${kept}${partly?'+'+partly+'½':''}</div><div class="l">Kept</div></div>
@@ -518,7 +637,7 @@ function renderDeep(){
         .map((q,i)=>`<label>${q}</label><div class="opts" id="pss${i}">${[0,1,2,3,4].map(v=>`<button onclick="pssPick(${i},${v},this)">${v}</button>`).join('')}</div>`).join('')}
       <p class="small">0 = never · 4 = very often</p>
     </div>
-    <button class="btn green" onclick="submitDeep()">Save deep session</button>`;
+    <button class="btn" onclick="submitDeep()">Save deep session</button>`;
   DS={pss:[null,null,null,null]};
 }
 function pssPick(i,v,btn){DS.pss[i]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
@@ -534,13 +653,13 @@ function submitDeep(){
 }
 function deepSummaryHTML(s){
   let pssTxt='not measured';
-  if(s.pss!==null)pssTxt=s.pss+'/16 — '+(s.pss<=5?'low; consistent with your baseline calm':s.pss<=8?'moderate; matches your slightly-elevated baseline. Watch sleep and movement.':'elevated; prioritize recovery this week — your low moods hide well, including from you');
+  if(s.pss!==null&&s.pss!==undefined)pssTxt=s.pss+'/16 — '+(s.pss<=5?'low; consistent with your baseline calm':s.pss<=8?'moderate; matches your slightly-elevated baseline. Watch sleep and movement.':'elevated; prioritize recovery this week — your low moods hide well, including from you');
   return `
-    <h2>This week's contract <span class="done">✓ saved</span></h2>
+    <div class="cardtitle" style="margin-top:8px">This week's contract <span class="done" style="font-size:14px">✓ saved</span></div>
     <div class="action"><b>WOOP</b>
       Wish: ${esc(s.woop.wish)}<br>Outcome: ${esc(s.woop.outcome)}<br>
       Inner obstacle: ${esc(s.woop.obstacle)}<br>
-      <span style="color:var(--accent2)">If ${esc(s.woop.obstacle||'it appears')}, then ${esc(s.woop.plan||'execute the plan')}.</span></div>
+      <span style="color:var(--teal)">If ${esc(s.woop.obstacle||'it appears')}, then ${esc(s.woop.plan||'execute the plan')}.</span></div>
     <div class="action"><b>Booked blocks</b>
       Mastery: ${esc(s.ba.m1||'—')} · ${esc(s.ba.m2||'—')}<br>
       Pleasure: ${esc(s.ba.p1||'—')} · ${esc(s.ba.p2||'—')}
@@ -587,10 +706,10 @@ function drawChart(days){
       if(!started){ctx.moveTo(pad+i*step,y);started=true}else ctx.lineTo(pad+i*step,y);
       ctx.fillStyle=color;ctx.fillRect(pad+i*step-3,y-3,6,6);});
     ctx.stroke();};
-  line(r=>r.mood,'#5b8cff',ym);
-  line(r=>r.energy,'#3ddc97',ye);
+  line(r=>r.mood,'#7aa2ff',ym);
+  line(r=>r.energy,'#5fd4c4',ye);
   days.forEach((k,i)=>{const r=DB.days[k];if(!r||r.kept===undefined)return;
-    ctx.fillStyle=r.kept>=1?'#3ddc97':r.kept===0.5?'#ffb454':'#ff6b6b';
+    ctx.fillStyle=r.kept>=1?'#5fd4c4':r.kept===0.5?'#f4b86a':'#f4756b';
     ctx.beginPath();ctx.arc(pad+i*step,H-15,5,0,7);ctx.fill();});
 }
 
@@ -610,7 +729,7 @@ function importData(){
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 /* ============ INIT ============ */
-function renderAll(){updStreak();renderAM();renderPM();
+function renderAll(){renderScore();renderAM();renderPM();
   if(!document.getElementById('view-history').classList.contains('hidden'))renderHistory();
   if(!document.getElementById('view-deep').classList.contains('hidden'))renderDeep();}
 renderAll();
