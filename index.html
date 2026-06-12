@@ -40,7 +40,7 @@
   .scorecard{
     background:linear-gradient(160deg,#1a2440 0%,#141c31 70%);
     border:1px solid var(--border);border-radius:var(--radius);
-    padding:24px 18px 18px;margin-bottom:16px;
+    padding:24px 18px 18px;margin-bottom:6px;
     display:flex;justify-content:space-around;align-items:flex-end;gap:6px;
     box-shadow:0 18px 40px -22px rgba(0,0,0,.8);
   }
@@ -50,6 +50,8 @@
   .ringval{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
   .ringval .n{font-weight:200}
   .ringval .u{font-size:10px;color:var(--muted);letter-spacing:1px}
+  #xpline{text-align:center;margin:0 0 16px;font-size:11.5px;color:var(--muted);letter-spacing:.6px}
+  #xpline b{color:var(--gold);font-weight:600;letter-spacing:1px}
 
   /* ---------- cards ---------- */
   .card{
@@ -146,6 +148,7 @@
 
   <!-- ====== SCORE RINGS ====== -->
   <div class="scorecard" id="scorecard"></div>
+  <div id="xpline"></div>
 
   <!-- ================= DAILY ================= -->
   <div id="view-daily">
@@ -180,6 +183,11 @@
       <canvas id="chart" height="180"></canvas>
       <p class="small" style="margin-top:8px">Blue = mood · Teal = energy · Bottom dots = commitment kept / partly / missed</p>
     </div>
+    <div class="card">
+      <h2>Personal records</h2>
+      <div class="statrow" id="prRow"></div>
+      <p class="small">Records are vs yourself. They only move one direction.</p>
+    </div>
     <div class="card"><h2>Daily log</h2><div id="histList"></div></div>
     <div class="card"><h2>Deep sessions</h2><div id="deepList"></div></div>
   </div>
@@ -203,6 +211,19 @@
           <li>Low energy → movement first (exercise rivals antidepressants for mild low mood).</li>
           <li>Execution tactics rotate daily — your Openness kills fixed routines.</li>
           <li>Framing: stakes and metrics, not virtue and cheerleading — low Agreeableness, high Achievement.</li>
+        </ul>
+      </details>
+      <details><summary>Meds & sleep-aid tracking (v4)</summary>
+        <ul>
+          <li>Morning pulse asks what you took. Two taps, optional, no moralizing — it's instrumentation, not judgment.</li>
+          <li><b>Sleep aid is logged against the night that just ended</b> (stored on today's date), which matches how Oura dates sleep. ADHD meds are logged for today.</li>
+          <li>The payoff is in analysis: med-on vs med-off days against execution, and sleep aids head-to-head against sleep quality once Oura data joins.</li>
+        </ul>
+      </details>
+      <details><summary>XP & personal records (v4)</summary>
+        <ul>
+          <li>XP: 10 × commitment kept (5 for partly), 2 per check-in day, 15 per deep session. Levels get progressively longer. No badges, no confetti — a number that only goes up.</li>
+          <li>Personal records: longest streak, best 7-day execution, most kept in any week. You compete with your own history, nobody else's.</li>
         </ul>
       </details>
       <details><summary>Weekend deep session</summary>
@@ -285,7 +306,7 @@ const todayK=()=>new Date().toISOString().slice(0,10);
 const offsetK=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
 const day=k=>{if(!DB.days[k])DB.days[k]={};return DB.days[k]};
 const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
-document.getElementById('devLabel').textContent=isMobile?'· phone':'· mac';
+document.getElementById('devLabel').textContent=(isMobile?'· phone':'· mac')+' · v4';
 (function(){
   const h=new Date().getHours();
   const g=h<5?'Late night':h<11?'Good morning':h<17?'Good afternoon':'Good evening';
@@ -309,9 +330,21 @@ document.getElementById('devLabel').textContent=isMobile?'· phone':'· mac';
   }catch(e){}
 })();
 
+/* ============ MEDS CONFIG (v4) ============
+   One line per med / sleep aid. Edit labels here when the final list arrives.
+   id = stable key stored in the data (never change once used); label = what the chip shows. */
+const MEDS=[
+  {id:'adhd',label:'ADHD med'}
+];
+const SLEEP_AIDS=[
+  {id:'sleep',label:'Sleep aid'}
+];
+const medLabel=id=>(MEDS.find(m=>m.id===id)||{}).label||id;
+const aidLabel=id=>(SLEEP_AIDS.find(m=>m.id===id)||{}).label||id;
+
 /* ============ MERGE ============ */
 const GROUPS=[
-  {ts:'morningTs',fields:['mood','energy','moodLabel','morningTs']},
+  {ts:'morningTs',fields:['mood','energy','moodLabel','meds','sleepAids','morningTs']},
   {ts:'planTs',fields:['mit','trigger','obstacle','planTs']},
   {ts:'eveningTs',fields:['kept','note','eveningTs']}
 ];
@@ -387,20 +420,37 @@ function show(v){
     document.getElementById('view-'+x).classList.toggle('hidden',x!==v);
     document.getElementById('tab-'+x).classList.toggle('active',x===v);
   });
-  document.getElementById('scorecard').style.display=(v==='daily'||v==='history')?'flex':'none';
+  const showScore=(v==='daily'||v==='history');
+  document.getElementById('scorecard').style.display=showScore?'flex':'none';
+  document.getElementById('xpline').style.display=showScore?'block':'none';
   if(v==='history')renderHistory();
   if(v==='deep')renderDeep();
   if(v==='settings'){document.getElementById('ghToken').value=CFG.token||'';document.getElementById('gistId').value=CFG.gistId||''}
   window.scrollTo(0,0);
 }
 
-/* ============ STREAK + RINGS ============ */
+/* ============ STREAK + RINGS + XP ============ */
 function dayDone(k){const r=DB.days[k];return r&&(r.morningTs||r.eveningTs)}
 function streak(){
   let s=0,d=new Date();
   if(!dayDone(todayK()))d.setDate(d.getDate()-1);
   while(true){const k=d.toISOString().slice(0,10);if(dayDone(k)){s++;d.setDate(d.getDate()-1)}else break}
   return s;
+}
+function xpTotal(){
+  let xp=0;
+  Object.values(DB.days).forEach(r=>{
+    if(r.kept!==undefined)xp+=Math.round(r.kept*10);
+    if(r.morningTs||r.eveningTs)xp+=2;
+  });
+  xp+=(DB.deep||[]).length*15;
+  return xp;
+}
+function levelInfo(){
+  const xp=xpTotal();
+  let lvl=1,need=50,floor=0;
+  while(xp>=floor+need){floor+=need;lvl++;need=50*lvl}
+  return{xp,lvl,into:xp-floor,need};
 }
 function ringSVG(pct,size,stroke,color,track){
   const r=(size-stroke)/2, c=2*Math.PI*r;
@@ -432,6 +482,8 @@ function renderScore(){
     box('Execution · 7d', exec, exec==null?'–':Math.round(exec*100),'%',124,'url(#none)').replace('url(#none)','#5fd4c4')+
     box('Streak', Math.min(1,streak()/7), streak(),'days',88,'#e8c476');
   // energy not ringed to keep 3 rings; it lives in Trends
+  const li=levelInfo();
+  document.getElementById('xpline').innerHTML=`<b>LVL ${li.lvl}</b> · ${li.xp} XP · ${li.need-li.into} to next`;
   document.getElementById('streakNum')&&(document.getElementById('streakNum').textContent=streak());
 }
 function updStreak(){renderScore()}
@@ -462,8 +514,10 @@ function renderAM(){
   const badge=document.getElementById('amBadge');
   if(t.morningTs){
     badge.className='badge done';badge.textContent='done';
+    const medsTxt=(t.meds&&t.meds.length)?' · meds: '+t.meds.map(medLabel).join(', '):'';
+    const aidsTxt=(t.sleepAids&&t.sleepAids.length)?' · sleep aid: '+t.sleepAids.map(aidLabel).join(', '):'';
     el.innerHTML=`
-      <p class="muted" style="margin-top:8px">Energy ${['','low','medium','high'][t.energy]} · Mood ${t.mood}/5${t.moodLabel?' · "'+esc(t.moodLabel)+'"':''}</p>
+      <p class="muted" style="margin-top:8px">Energy ${['','low','medium','high'][t.energy]} · Mood ${t.mood}/5${t.moodLabel?' · "'+esc(t.moodLabel)+'"':''}${esc(medsTxt)}${esc(aidsTxt)}</p>
       ${t.mit?`<div class="action"><b>Today's commitment (set last evening)</b>${esc(t.mit)}${t.trigger?'<br><span class="small">Start: '+esc(t.trigger)+'</span>':''}
         ${t.obstacle?`<br><span class="small" style="color:var(--teal)">If ${esc(t.obstacle.toLowerCase())} → I will ${esc(IFTHEN[t.obstacle]||'execute the plan.')}</span>`:''}</div>`
         :'<p class="muted">No commitment was set for today. Tonight\'s review fixes that.</p>'}
@@ -486,15 +540,27 @@ function renderAM(){
       <div class="q">Name the feeling precisely — one sentence.</div>
       <input type="text" id="amLabel" placeholder="e.g. flat and restless because X stalled">
     </div>
+    <div class="q">Meds today? <span class="small">(tap what you took — skip if none)</span></div>
+    <div class="opts">${MEDS.map(m=>`<button onclick="amToggle(this,'meds','${m.id}')">${m.label}</button>`).join('')}</div>
+    <div class="q">Sleep aid last night? <span class="small">(the night that just ended)</span></div>
+    <div class="opts">${SLEEP_AIDS.map(m=>`<button onclick="amToggle(this,'sleepAids','${m.id}')">${m.label}</button>`).join('')}</div>
     <button class="btn" onclick="submitAM()">Done</button>`;
 }
 function amPick(btn,k,v){AM[k]=v;[...btn.parentElement.children].forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
   if(k==='mood')document.getElementById('amLabelBox').classList.toggle('hidden',v>2)}
+function amToggle(btn,k,id){
+  AM[k]=AM[k]||[];
+  const i=AM[k].indexOf(id);
+  if(i>=0){AM[k].splice(i,1);btn.classList.remove('sel')}
+  else{AM[k].push(id);btn.classList.add('sel')}
+}
 function submitAM(){
   if(AM.energy===undefined||AM.mood===undefined){alert('Energy and mood required.');return}
   const t=day(todayK());
   t.energy=AM.energy;t.mood=AM.mood;
   t.moodLabel=(document.getElementById('amLabel')||{}).value||'';
+  t.meds=AM.meds||[];
+  t.sleepAids=AM.sleepAids||[];
   t.morningTs=Date.now();AM={};
   pushSoon();updStreak();renderAM();
 }
@@ -670,6 +736,36 @@ function deepSummaryHTML(s){
 
 /* ============ HISTORY ============ */
 function lastN(n){const a=[];const d=new Date();for(let i=0;i<n;i++){a.unshift(d.toISOString().slice(0,10));d.setDate(d.getDate()-1)}return a}
+function prStats(){
+  const keys=Object.keys(DB.days).sort();
+  const res={bestStreak:0,bestExec:null,bestKept:0,deeps:(DB.deep||[]).length};
+  if(!keys.length)return res;
+  // longest streak ever (consecutive checked-in days)
+  let cur=0,prev=null;
+  keys.forEach(k=>{
+    if(!dayDone(k))return;
+    if(prev){
+      const d=new Date(prev);d.setDate(d.getDate()+1);
+      cur=(d.toISOString().slice(0,10)===k)?cur+1:1;
+    }else cur=1;
+    prev=k;
+    if(cur>res.bestStreak)res.bestStreak=cur;
+  });
+  // best 7-day windows across full history
+  const start=new Date(keys[0]),end=new Date(todayK());
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    let sum=0,nk=0;
+    for(let i=6;i>=0;i--){
+      const dd=new Date(d);dd.setDate(dd.getDate()-i);
+      const r=DB.days[dd.toISOString().slice(0,10)];
+      if(r&&r.kept!==undefined){sum+=r.kept;nk++}
+    }
+    if(nk&&sum>res.bestKept)res.bestKept=sum;
+    if(nk>=3){const e=sum/nk;if(res.bestExec===null||e>res.bestExec)res.bestExec=e}
+  }
+  return res;
+}
+function fmtHalf(v){return v%1?Math.floor(v)+'½':String(v)}
 function renderHistory(){
   const days=lastN(30);
   const have=days.map(k=>DB.days[k]).filter(r=>r&&(r.morningTs||r.eveningTs));
@@ -680,15 +776,26 @@ function renderHistory(){
   document.getElementById('stMood').textContent=avg('mood');
   document.getElementById('stEnergy').textContent=avg('energy');
   document.getElementById('stCheckins').textContent=have.length+'/30';
+  const pr=prStats();
+  document.getElementById('prRow').innerHTML=`
+    <div class="stat"><div class="v">${pr.bestStreak}</div><div class="l">Longest streak</div></div>
+    <div class="stat"><div class="v">${pr.bestExec===null?'–':Math.round(pr.bestExec*100)+'%'}</div><div class="l">Best 7d exec</div></div>
+    <div class="stat"><div class="v">${fmtHalf(pr.bestKept)}</div><div class="l">Most kept / wk</div></div>
+    <div class="stat"><div class="v">${pr.deeps}</div><div class="l">Deep sessions</div></div>`;
   drawChart(days);
   document.getElementById('histList').innerHTML=days.slice().reverse()
     .filter(k=>DB.days[k]&&(DB.days[k].morningTs||DB.days[k].eveningTs||DB.days[k].mit)).map(k=>{
     const r=DB.days[k];
     const kept=r.kept===undefined?'':r.kept>=1?' <span class="done">✓ kept</span>':r.kept===0.5?' <span style="color:var(--warn)">½ partly</span>':' <span class="notdone">✗ missed</span>';
+    const medbits=[
+      (r.meds&&r.meds.length)?'meds: '+r.meds.map(medLabel).join(', '):'',
+      (r.sleepAids&&r.sleepAids.length)?'sleep aid: '+r.sleepAids.map(aidLabel).join(', '):''
+    ].filter(Boolean).join(' · ');
     return `<div class="histitem"><b>${k}</b>${r.mood?' · mood '+r.mood:''}${r.energy?' · energy '+r.energy:''}
       ${r.mit?'<br>'+esc(r.mit)+kept:''}
       ${r.note?'<br><span class="small">note: '+esc(r.note)+'</span>':''}
-      ${r.moodLabel?'<br><span class="small">felt: '+esc(r.moodLabel)+'</span>':''}</div>`;
+      ${r.moodLabel?'<br><span class="small">felt: '+esc(r.moodLabel)+'</span>':''}
+      ${medbits?'<br><span class="small">'+esc(medbits)+'</span>':''}</div>`;
   }).join('')||'<p class="muted">No check-ins yet.</p>';
   document.getElementById('deepList').innerHTML=DB.deep.slice().reverse().map(s=>
     `<div class="histitem"><b>${s.date}</b> · WOOP: ${esc(s.woop.wish)}${s.pss!==null&&s.pss!==undefined?' · PSS-4: '+s.pss+'/16':''}<br><span class="small">${esc(s.lesson||'')}</span></div>`
